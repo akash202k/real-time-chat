@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String   @id @default(uuid()) @db.Uuid
+  username        String
+  email           String   @unique
+  mobileNumber    String   @unique
+  contacts        String[] // List of saved contacts (phone numbers)
+  blockedContacts String[] // List of blocked numbers
+  password        String
+
+  sentMessages     Chat[] @relation("SentMessages")
+  receivedMessages Chat[] @relation("ReceivedMessages")
+}
+
+model Chat {
+  id         String     @id @default(uuid()) @db.Uuid
+  fromId     String     @db.Uuid
+  toId       String     @db.Uuid
+  readStatus ReadStatus @default(UNREAD)
+  readAt     DateTime?
+  message    String
+  sentAt     DateTime   @default(now())
+
+  sender   User @relation("SentMessages", fields: [fromId], references: [id])
+  receiver User @relation("ReceivedMessages", fields: [toId], references: [id])
+}
+
+enum ReadStatus {
+  UNREAD
+  READ
+}
